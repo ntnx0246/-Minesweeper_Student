@@ -30,10 +30,10 @@ class MyAI( AI ):
 		self.__startY = startY
 
 		self.__board = {} # (x, y) -> number
-		self.__covered = set()
-		self.__safe_moves = set() 
-		self.__mines = set()
-		self.__flag_moves = deque()
+		self.__covered = set() # Coordinates of unkonwn tiles
+		self.__safe_moves = set() # Coordinates of safe moves
+		self.__mines = set() # Coordinates of known mines
+		self.__flag_moves = deque() # Queue of moves to flag mines
 		
 
 		#Initialize covered set with all coordinates
@@ -43,7 +43,7 @@ class MyAI( AI ):
 
 		self.__lastX = startX
 		self.__lastY = startY
-		self.__lastAction = AI.Action.UNCOVER
+		self.__lastAction = AI.Action.UNCOVER # First tile is safe and uncovered for us
 
 		self.__covered.discard((startX, startY))
 		########################################################################
@@ -64,8 +64,14 @@ class MyAI( AI ):
 		isDifferent = True
 		while isDifferent:
 			isDifferent = False
+
+			# Checks for every number tiled on the board
 			for (x, y), num in self.__board.items():
+
+				# Get the neighbors of the tile in a list of (x, y) coordinates
 				neighbors = self.getNeighbors(x, y)
+				
+				# Finds covered neighbors by checking if neighbor is in the covered set and flagged neighbors by checking if neighbor is in the mines set
 				covered_neighbors = [n for n in neighbors if n in self.__covered]
 				flagged_neighbors = [n for n in neighbors if n in self.__mines]
 
