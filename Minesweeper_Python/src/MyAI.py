@@ -31,7 +31,7 @@ class MyAI( AI ):
 
 		self.__board = {} # (x, y) -> number
 		self.__covered = set() # Coordinates of unkonwn tiles
-		self.__safe_moves = set() # Coordinates of safe moves
+		self.__safe_moves = deque() # Coordinates of safe moves
 		self.__mines = set() # Coordinates of known mines
 		self.__flag_moves = deque() # Queue of moves to flag mines
 		
@@ -56,7 +56,6 @@ class MyAI( AI ):
 		########################################################################
 		#							YOUR CODE BEGINS						   #
 		########################################################################
-		
 		# Update the board with the revealed numbers by the last action
 		if(self.__lastAction == AI.Action.UNCOVER and number >= 0):
 			self.__board[(self.__lastX, self.__lastY)] = number
@@ -78,10 +77,10 @@ class MyAI( AI ):
 				# All the covered mines have to be safe
 				if num == len(flagged_neighbors) and len(covered_neighbors) > 0:
 					for n in covered_neighbors:
-						if n not in self.__safe_moves:
-							self.__safe_moves.add(n)
+						if n not in self.__safe_moves and n not in self.__mines:
+							self.__safe_moves.append(n)
 							isDifferent = True
-
+			
 				# Rest of flags must be mines
 				if num == len(flagged_neighbors) + len(covered_neighbors) and len(covered_neighbors) > 0:
 					for n in covered_neighbors:
@@ -92,7 +91,7 @@ class MyAI( AI ):
 		
 		# Choose a flag move if there is one
 		if len(self.__flag_moves) > 0:
-			move = self.__flag_moves.pop()
+			move = self.__flag_moves.popleft()
 			self.__lastAction = AI.Action.FLAG
 			self.__lastX, self.__lastY = move.getX(), move.getY()
 			self.__covered.discard((self.__lastX, self.__lastY))
@@ -100,10 +99,11 @@ class MyAI( AI ):
 		
 		# Choose a safe move if there is one
 		if len(self.__safe_moves) > 0:
-			move = self.__safe_moves.pop()
+			move = self.__safe_moves.popleft()
 			self.__covered.discard(move)
 			self.__lastX, self.__lastY = move
 			self.__lastAction = AI.Action.UNCOVER
+
 			return Action(AI.Action.UNCOVER, move[0], move[1])
 
 		# Choose a random tile if there is no guarenteed safe move or flagged move
@@ -128,6 +128,7 @@ class MyAI( AI ):
 		########################################################################
 
 #Todo:
+# Optimize to use effective number instead of recalculating everytime. 
 # Implement constraint logic
 # Implement probability checking when guessing
 # Implement backtracking
