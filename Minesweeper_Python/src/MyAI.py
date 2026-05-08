@@ -89,6 +89,7 @@ class MyAI( AI ):
 			move = self.__flag_moves.pop()
 			self.__lastAction = AI.Action.FLAG
 			self.__lastX, self.__lastY = move.getX(), move.getY()
+			self.__covered.discard((self.__lastX, self.__lastY))
 			return move
 		
 		# Choose a safe move if there is one
