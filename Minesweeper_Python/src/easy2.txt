@@ -1,4 +1,4 @@
-easy: 1
+easy: 0
 medium: 0
 expert: 0
-score: 1
+score: 0

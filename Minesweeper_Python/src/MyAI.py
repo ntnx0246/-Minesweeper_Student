@@ -126,3 +126,8 @@ class MyAI( AI ):
 		########################################################################
 		#							YOUR CODE ENDS							   #
 		########################################################################
+
+#Todo:
+# Implement constraint logic
+# Implement probability checking when guessing
+# Implement backtracking
