@@ -107,22 +107,44 @@ class MyAI( AI ):
 			return Action(AI.Action.UNCOVER, move[0], move[1])
 
 		# Choose a random tile if there is no guarenteed safe move or flagged move
+		# Choose a random tile that has nothing uncovered bordering it if possible
 		if(len(self.__covered) > 0):
+			# uncovered = set()
+			# for tile in self.__covered:
+			# 	has_neighboor = self.hasUncoveredNeighbor(tile[0], tile[1])
+			# 	if has_neighboor == False:
+			# 		uncovered.add(tile)
+     
+			# if len(uncovered) != 0:
+			# 	move = uncovered.pop()
+			# 	self.__lastX, self.__lastY = move
+			# 	self.__lastAction = AI.Action.UNCOVER
+			# 	return Action(AI.Action.UNCOVER, move[0], move[1])
+
 			move = self.__covered.pop()
 			self.__lastX, self.__lastY = move
 			self.__lastAction = AI.Action.UNCOVER
 			return Action(AI.Action.UNCOVER, move[0], move[1])
 		
-		# Board is uncovred so leave game
+		# Board is uncovered so leave game
 		return Action(AI.Action.LEAVE)
+		
 
 	def getNeighbors(self, x, y):
-			neighbors = []
-			for i in range(-1, 2):
-				for j in range(-1, 2):
-					if (0 <= x + i < self.__colDimension) and (0 <= y + j < self.__rowDimension) and not (i == 0 and j == 0):
-						neighbors.append((x + i, y + j))
-			return neighbors
+		neighbors = []
+		for i in range(-1, 2):
+			for j in range(-1, 2):
+				if (0 <= x + i < self.__colDimension) and (0 <= y + j < self.__rowDimension) and not (i == 0 and j == 0):
+					neighbors.append((x + i, y + j))
+		return neighbors
+
+	def hasUncoveredNeighbor(self, x, y):
+		for i in range(-1, 2):
+			for j in range(-1, 2):
+				if (0 <= x + i < self.__colDimension) and (0 <= y + j < self.__rowDimension) and not (i == 0 and j == 0) and ((x + i, y + j) in self.__board):
+					return True
+		return False
+
 		########################################################################
 		#							YOUR CODE ENDS							   #
 		########################################################################
@@ -131,4 +153,4 @@ class MyAI( AI ):
 # Optimize to use effective number instead of recalculating everytime. 
 # Implement constraint logic
 # Implement probability checking when guessing
-# Implement backtracking
+# Implement backtracking	
