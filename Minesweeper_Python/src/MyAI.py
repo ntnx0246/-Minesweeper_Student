@@ -64,6 +64,41 @@ class MyAI( AI ):
 		while isDifferent:
 			isDifferent = False
 
+			constraints = []
+			for (x, y), num in self.__board.items():
+				neighbors = self.getNeighbors(x, y)
+				covered = frozenset(n for n in neighbors if n in self.__covered)
+				flagged = sum(1 for n in neighbors if n in self.__mines)
+				if len(covered) != 0:
+					constraints.append((covered, num - flagged))
+			
+			new_mines = 0
+			new_set = frozenset()
+   
+			for A in constraints:
+				for B in constraints:
+					# A must be a subset of B in this case for us to use this
+					if A[0] < B[0]:
+						new_set   = B[0] - A[0]
+						new_mines = B[1] - A[1]
+						# Apply the two cases below
+   
+						if new_mines == 0:
+							# All tiles in new_set are safe
+							for tile in new_set:
+								if tile not in self.__safe_moves and tile not in self.__mines:
+									self.__safe_moves.append(tile)
+									isDifferent = True
+
+						if new_mines == len(new_set):
+							# All tiles in new_set are mines
+							for tile in new_set:
+								if tile not in self.__mines:
+									self.__mines.add(tile)
+									self.__flag_moves.append(Action(AI.Action.FLAG, tile[0], tile[1]))
+									isDifferent = True
+            
+            
 			# Checks for every number tiled on the board
 			for (x, y), num in self.__board.items():
 
@@ -80,7 +115,7 @@ class MyAI( AI ):
 						if n not in self.__safe_moves and n not in self.__mines:
 							self.__safe_moves.append(n)
 							isDifferent = True
-			
+
 				# Rest of flags must be mines
 				if num == len(flagged_neighbors) + len(covered_neighbors) and len(covered_neighbors) > 0:
 					for n in covered_neighbors:
@@ -88,6 +123,29 @@ class MyAI( AI ):
 							self.__mines.add(n)
 							self.__flag_moves.append(Action(AI.Action.FLAG, n[0], n[1]))
 							isDifferent = True
+       
+			# Calculate remaining mines
+			mines_remaining = self.__totalMines - len(self.__mines)
+			# The amount that remains covered
+			covered_count = len(self.__covered)
+			
+			# If we uncovered all the mines, we can uncover all other tiles
+			if mines_remaining == 0 and covered_count > 0:
+				# All remaining covered tiles are safe
+				for tile in self.__covered:
+					if tile not in self.__safe_moves and tile not in self.__mines:
+						self.__safe_moves.append(tile)
+						isDifferent = True
+			
+			# If only mines remain, we can flag every other tile
+			if mines_remaining == covered_count and covered_count > 0:
+				# All remaining covered tiles are mines
+				for tile in list(self.__covered):
+					if tile not in self.__mines:
+						self.__mines.add(tile)
+						self.__flag_moves.append(Action(AI.Action.FLAG, tile[0], tile[1]))
+						isDifferent = True
+                
 		
 		# Choose a flag move if there is one
 		if len(self.__flag_moves) > 0:
@@ -109,17 +167,17 @@ class MyAI( AI ):
 		# Choose a random tile if there is no guarenteed safe move or flagged move
 		# Choose a random tile that has nothing uncovered bordering it if possible
 		if(len(self.__covered) > 0):
-			# uncovered = set()
-			# for tile in self.__covered:
-			# 	has_neighboor = self.hasUncoveredNeighbor(tile[0], tile[1])
-			# 	if has_neighboor == False:
-			# 		uncovered.add(tile)
+			uncovered = set()
+			for tile in self.__covered:
+				has_neighboor = self.hasUncoveredNeighbor(tile[0], tile[1])
+				if has_neighboor == False:
+					uncovered.add(tile)
      
-			# if len(uncovered) != 0:
-			# 	move = uncovered.pop()
-			# 	self.__lastX, self.__lastY = move
-			# 	self.__lastAction = AI.Action.UNCOVER
-			# 	return Action(AI.Action.UNCOVER, move[0], move[1])
+			if len(uncovered) != 0:
+				move = uncovered.pop()
+				self.__lastX, self.__lastY = move
+				self.__lastAction = AI.Action.UNCOVER
+				return Action(AI.Action.UNCOVER, move[0], move[1])
 
 			move = self.__covered.pop()
 			self.__lastX, self.__lastY = move
