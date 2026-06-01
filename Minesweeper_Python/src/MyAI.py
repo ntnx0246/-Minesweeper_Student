@@ -35,6 +35,10 @@ class MyAI( AI ):
 		self.__mines = set() # Coordinates of known mines
 		self.__flag_moves = deque() # Queue of moves to flag mines
 		
+		# For debug
+		self.__guess_count = 0
+		self.__safe_count = 0
+		self.__flag_count = 0
 
 		#Initialize covered set with all coordinates
 		for x in range(colDimension):
@@ -71,10 +75,9 @@ class MyAI( AI ):
 				flagged = sum(1 for n in neighbors if n in self.__mines)
 				if len(covered) != 0:
 					constraints.append((covered, num - flagged))
-			
+
 			new_mines = 0
 			new_set = frozenset()
-   
 			for A in constraints:
 				for B in constraints:
 					# A must be a subset of B in this case for us to use this
@@ -82,7 +85,7 @@ class MyAI( AI ):
 						new_set   = B[0] - A[0]
 						new_mines = B[1] - A[1]
 						# Apply the two cases below
-   
+
 						if new_mines == 0:
 							# All tiles in new_set are safe
 							for tile in new_set:
@@ -97,7 +100,7 @@ class MyAI( AI ):
 									self.__mines.add(tile)
 									self.__flag_moves.append(Action(AI.Action.FLAG, tile[0], tile[1]))
 									isDifferent = True
-            
+         
             
 			# Checks for every number tiled on the board
 			for (x, y), num in self.__board.items():
@@ -150,6 +153,7 @@ class MyAI( AI ):
 		# Choose a flag move if there is one
 		if len(self.__flag_moves) > 0:
 			move = self.__flag_moves.popleft()
+			self.__flag_count += 1
 			self.__lastAction = AI.Action.FLAG
 			self.__lastX, self.__lastY = move.getX(), move.getY()
 			self.__covered.discard((self.__lastX, self.__lastY))
@@ -157,6 +161,7 @@ class MyAI( AI ):
 		
 		# Choose a safe move if there is one
 		if len(self.__safe_moves) > 0:
+			self.__safe_count += 1
 			move = self.__safe_moves.popleft()
 			self.__covered.discard(move)
 			self.__lastX, self.__lastY = move
@@ -167,6 +172,7 @@ class MyAI( AI ):
 		# Choose a random tile if there is no guarenteed safe move or flagged move
 		# Choose a random tile that has nothing uncovered bordering it if possible
 		if(len(self.__covered) > 0):
+			self.__guess_count += 1
 			uncovered = set()
 			for tile in self.__covered:
 				has_neighboor = self.hasUncoveredNeighbor(tile[0], tile[1])
@@ -175,6 +181,7 @@ class MyAI( AI ):
      
 			if len(uncovered) != 0:
 				move = uncovered.pop()
+				self.__covered.discard(move)    
 				self.__lastX, self.__lastY = move
 				self.__lastAction = AI.Action.UNCOVER
 				return Action(AI.Action.UNCOVER, move[0], move[1])
@@ -183,7 +190,9 @@ class MyAI( AI ):
 			self.__lastX, self.__lastY = move
 			self.__lastAction = AI.Action.UNCOVER
 			return Action(AI.Action.UNCOVER, move[0], move[1])
-		
+
+		# Probability based guessing
+		print(f"Game end. Guesses: {self.__guess_count}, Safe: {self.__safe_count}, Flags: {self.__flag_count}")
 		# Board is uncovered so leave game
 		return Action(AI.Action.LEAVE)
 		
